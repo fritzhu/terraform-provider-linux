@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -103,7 +105,7 @@ func (l *linux) exec(ctx context.Context, cmd *remote.Cmd) (err error) {
 	return cmd.Wait()
 }
 
-func (l *linux) upload(ctx context.Context, path string, input io.Reader) (err error) {
+func (l *linux) upload(ctx context.Context, pth string, input io.Reader) (err error) {
 	l.commMutex.Lock()
 	defer l.commMutex.Unlock()
 
@@ -111,7 +113,15 @@ func (l *linux) upload(ctx context.Context, path string, input io.Reader) (err e
 	if err != nil {
 		return
 	}
-	return c.Upload(path, input)
+
+	fn := path.Base(pth)
+	upPath := fmt.Sprint("/tmp/%s", fn)
+	err = c.Upload(upPath, input)
+	if err != nil {
+		return err
+	}
+
+	return l.mv(ctx, upPath, pth)
 }
 
 func (l *linux) uploadScript(ctx context.Context, path string, input io.Reader) (err error) {

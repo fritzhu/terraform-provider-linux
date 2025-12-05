@@ -415,7 +415,13 @@ func (c *Communicator) Upload(path string, input io.Reader) error {
 		return scpUploadFile(targetFile, input, w, stdoutR, size)
 	}
 
-	return c.scpSession("scp -vt "+targetDir, scpFunc)
+	err := c.scpSession("scp -vt /tmp", scpFunc)
+	if err != nil {
+		return err
+	}
+
+	err = c.ex
+	return
 }
 
 // UploadScript implementation of communicator.Communicator interface
