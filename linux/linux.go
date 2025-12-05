@@ -142,12 +142,16 @@ type permission struct {
 func (l *linux) setPermission(ctx context.Context, path string, p permission) (err error) {
 	pathSafe := shellescape.Quote(path)
 
-	c := fmt.Sprintf(`chown %d:%d %s`, p.owner, p.group, pathSafe)
+	sudo := ""
+	if v, ok := l.connInfo[attrProviderUseSudo]; ok && v == "true" {
+		sudo = "sudo "
+	}
+	c := fmt.Sprintf(`%schown %d:%d %s`, sudo, p.owner, p.group, pathSafe)
 	err = l.exec(ctx, &remote.Cmd{Command: c})
 	if err != nil {
 		return err
 	}
-	c = fmt.Sprintf(`chmod %s %s`, p.mode, pathSafe)
+	c = fmt.Sprintf(`%schmod %s %s`, sudo, p.mode, pathSafe)
 	err = l.exec(ctx, &remote.Cmd{Command: c})
 	return
 }
