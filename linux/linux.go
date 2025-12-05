@@ -141,9 +141,15 @@ type permission struct {
 
 func (l *linux) setPermission(ctx context.Context, path string, p permission) (err error) {
 	pathSafe := shellescape.Quote(path)
-	cmd := fmt.Sprintf(`{ chown %d:%d %s && chmod %s %s ;}`,
-		p.owner, p.group, pathSafe, p.mode, pathSafe)
-	return l.exec(ctx, &remote.Cmd{Command: cmd})
+
+	c := fmt.Sprintf(`chown %d:%d %s`, p.owner, p.group, pathSafe)
+	err = l.exec(ctx, &remote.Cmd{Command: c})
+	if err != nil {
+		return err
+	}
+	c = fmt.Sprintf(`chmod %s %s`, p.mode, pathSafe)
+	err = l.exec(ctx, &remote.Cmd{Command: c})
+	return
 }
 
 func (l *linux) getPermission(ctx context.Context, path string) (p permission, err error) {
