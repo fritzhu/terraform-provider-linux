@@ -120,7 +120,11 @@ func (l *linux) upload(ctx context.Context, pth string, input io.Reader) (err er
 		return fmt.Errorf("failed to upload to tmp: %w", err)
 	}
 
-	err = l.mv(ctx, upPath, pth)
+	cmd := &remote.Cmd{Command: shellescape.QuoteCommand(l.addSudo([]string{"mv", upPath, pth}))}
+	if err = c.Start(cmd); err != nil {
+		return fmt.Errorf("failed to start move: %w", err)
+	}
+	err = cmd.Wait()
 	if err != nil {
 		return fmt.Errorf("failed to move file to destination: %w", err)
 	}
