@@ -89,9 +89,9 @@ func (sc *script) exec(ctx context.Context) (res string, err error) {
 	defer func() { _ = sc.l.remove(ctx, path, "") }()
 
 	cmd := fmt.Sprintf(`{ %s && %s && %s %s ;}`,
-		shellescape.QuoteCommand([]string{"mkdir", "-p", sc.workdir}),
+		shellescape.QuoteCommand([]string{"sudo", "mkdir", "-p", sc.workdir}),
 		shellescape.QuoteCommand([]string{"cd", sc.workdir}),
-		sc.env.inline(), shellescape.QuoteCommand(append(sc.interpreter, path)),
+		sc.env.inline(), shellescape.QuoteCommand(append(append([]string{"sudo"}, sc.interpreter...), path)),
 	)
 	stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
 	err = sc.l.exec(ctx, &remote.Cmd{
