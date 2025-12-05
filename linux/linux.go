@@ -117,10 +117,14 @@ func (l *linux) upload(ctx context.Context, pth string, input io.Reader) (err er
 	upPath := fmt.Sprintf("/tmp/%s", fn)
 	err = c.Upload(upPath, input)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to upload to tmp: %w", err)
 	}
 
-	return l.mv(ctx, upPath, pth)
+	err = l.mv(ctx, upPath, pth)
+	if err != nil {
+		return fmt.Errorf("failed to move file to destination: %w", err)
+	}
+	return nil
 }
 
 func (l *linux) uploadScript(ctx context.Context, path string, input io.Reader) (err error) {

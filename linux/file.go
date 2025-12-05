@@ -48,7 +48,7 @@ func (l *linux) createFile(ctx context.Context, f *file) (err error) {
 
 	err = l.mkdirp(ctx, filepath.Dir(f.path))
 	if err != nil {
-		return
+		return fmt.Errorf("failed to make target directory: %w", err)
 	}
 
 	switch f.ignoreContent {
