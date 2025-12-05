@@ -15,6 +15,7 @@ const (
 	attrProviderHost    = "host"
 	attrProviderPort    = "port"
 	attrProviderHostKey = "host_key"
+	attrProviderUseSudo = "use_sudo"
 
 	attrProviderUser        = "user"
 	attrProviderPassword    = "password"
@@ -141,6 +142,11 @@ var schemaProvider = map[string]*schema.Schema{
 		Default:     "5m",
 		Description: " The timeout to wait for the connection to become available. Should be provided as a string like `30s` or `5m`. Defaults to 5 minutes.",
 	},
+	attrProviderUseSudo: {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "Set to true to prefix all commands with sudo.",
+	},
 }
 
 var subSchemaProviderOverride = func() (m map[string]*schema.Schema) {
@@ -164,6 +170,7 @@ func newLinuxFromSchema(d *schema.ResourceData) (l *linux, err error) {
 		attrProviderHost:    cast.ToString(d.Get(attrProviderHost)),
 		attrProviderPort:    cast.ToString(d.Get(attrProviderPort)),
 		attrProviderHostKey: cast.ToString(d.Get(attrProviderHostKey)),
+		attrProviderUseSudo: cast.ToString(d.Get(attrProviderUseSudo)),
 
 		attrProviderUser:        cast.ToString(d.Get(attrProviderUser)),
 		attrProviderPassword:    cast.ToString(d.Get(attrProviderPassword)),

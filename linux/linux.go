@@ -58,6 +58,13 @@ func (l *linux) init(ctx context.Context) error {
 	return l.commErr
 }
 
+func (l *linux) addSudo(cmds []string) []string {
+	if v, ok := l.connInfo[attrProviderUseSudo]; ok && v == "true" {
+		cmds = append([]string{"sudo"}, cmds...)
+	}
+	return cmds
+}
+
 func (l *linux) communicator(ctx context.Context) (*ssh.Communicator, error) {
 	l.commOnce.Do(func() {
 		err := resource.RetryContext(ctx, 5*time.Minute, func() *resource.RetryError {
@@ -141,7 +148,7 @@ func (l *linux) setPermission(ctx context.Context, path string, p permission) (e
 
 func (l *linux) getPermission(ctx context.Context, path string) (p permission, err error) {
 	stdout := new(bytes.Buffer)
-	cmd := shellescape.QuoteCommand([]string{"sudo", "stat", "-c", "%u %g %a", path})
+	cmd := shellescape.QuoteCommand(l.addSudo([]string{"stat", "-c", "%u %g %a", path}))
 	err = l.exec(ctx, &remote.Cmd{Command: cmd, Stdout: stdout})
 	var exitError *remote.ExitError
 	if errors.As(err, &exitError) {
@@ -189,13 +196,13 @@ func (l *linux) reservePath(ctx context.Context, path string) (err error) {
 }
 
 func (l *linux) mkdirp(ctx context.Context, path string) (err error) {
-	cmd := shellescape.QuoteCommand([]string{"sudo", "mkdir", "-p", path})
+	cmd := shellescape.QuoteCommand(l.addSudo([]string{"mkdir", "-p", path}))
 	return l.exec(ctx, &remote.Cmd{Command: cmd})
 }
 
 func (l *linux) cat(ctx context.Context, path string) (s string, err error) {
 	stdout := new(bytes.Buffer)
-	cmd := shellescape.QuoteCommand([]string{"sudo", "cat", path})
+	cmd := shellescape.QuoteCommand(l.addSudo([]string{"cat", path}))
 	if err = l.exec(ctx, &remote.Cmd{Command: cmd, Stdout: stdout}); err != nil {
 		return
 	}
@@ -203,7 +210,7 @@ func (l *linux) cat(ctx context.Context, path string) (s string, err error) {
 }
 
 func (l *linux) mv(ctx context.Context, old, new string) (err error) {
-	cmd := shellescape.QuoteCommand([]string{"sudo", "mv", old, new})
+	cmd := shellescape.QuoteCommand(l.addSudo([]string{"mv", old, new}))
 	return l.exec(ctx, &remote.Cmd{Command: cmd})
 }
 
@@ -217,13 +224,13 @@ func (l *linux) remove(ctx context.Context, path, recyclePath string) (err error
 		recycleFolder := fmt.Sprintf("%s/%d", recyclePath, time.Now().Unix())
 		cmd = fmt.Sprintf(`{ [ ! -e %s ] || { %s && %s ;} ;}`,
 			shellescape.Quote(path),
-			shellescape.QuoteCommand([]string{"sudo", "mkdir", "-p", recycleFolder}),
-			shellescape.QuoteCommand([]string{"sudo", "mv", path, recycleFolder}),
+			shellescape.QuoteCommand(l.addSudo([]string{"mkdir", "-p", recycleFolder})),
+			shellescape.QuoteCommand(l.addSudo([]string{"mv", path, recycleFolder})),
 		)
 	} else {
 		cmd = fmt.Sprintf(`{ [ ! -e %s ] || %s ;}`,
 			shellescape.Quote(path),
-			shellescape.QuoteCommand([]string{"sudo", "rm", "-rf", path}),
+			shellescape.QuoteCommand(l.addSudo([]string{"rm", "-rf", path})),
 		)
 	}
 	return l.exec(ctx, &remote.Cmd{Command: cmd})
