@@ -1,4 +1,4 @@
-Terraform Provider Linux
+Terraform Provider: Linux
 ========================
 
 [![Build Status](https://cloud.drone.io/api/badges/TelkomIndonesia/terraform-provider-linux/status.svg?branch=master)](https://cloud.drone.io/TelkomIndonesia/terraform-provider-linux)
