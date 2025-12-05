@@ -8,7 +8,6 @@ import (
 	"io"
 	"net"
 	"path"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -115,7 +114,7 @@ func (l *linux) upload(ctx context.Context, pth string, input io.Reader) (err er
 	}
 
 	fn := path.Base(pth)
-	upPath := fmt.Sprint("/tmp/%s", fn)
+	upPath := fmt.Sprintf("/tmp/%s", fn)
 	err = c.Upload(upPath, input)
 	if err != nil {
 		return err
